@@ -4,12 +4,26 @@ const csvParser = require('csv-parser');
 const fs = require('fs');
 const app = express();
 const port = 3000;
+//middleware import
+const fileLogger= require('./fileLogger');
 
 app.use(express.static('public'));
 
-const upload = multer({ dest: 'uploads/' });
+// CSV file filter
+const csvFileFilter = (req, file, cb) => {
+  if (file.mimetype === 'text/csv') {
+    cb(null, true); // Accept the file
+  } else {
+    cb(new Error('Invalid file type. Only CSV files are allowed.'), false); // Reject the file
+  }
+};
 
-app.post('/upload', upload.single('csvFile'), (req, res) => {
+const upload = multer({
+  dest: 'uploads/',
+  fileFilter: csvFileFilter, // Apply file type validation
+});
+
+app.post('/upload', upload.single('csvFile'), fileLogger, (req, res) => {
   const { file } = req;
   const results = [];
 
